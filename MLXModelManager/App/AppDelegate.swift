@@ -9,8 +9,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     let modelManager = ModelManager()
     let hfClient = HuggingFaceClient()
     let pythonEnvManager = PythonEnvManager()
+    let memoryMonitor = SystemMemoryMonitor()
+    let memoryNotifier = MemoryWarningNotifier()
 
     private var eventMonitor: Any?
+    private var memoryCheckTimer: Timer?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
@@ -23,14 +26,15 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         popover = NSPopover()
-        popover.contentSize = NSSize(width: 340, height: 520)
+        popover.contentSize = NSSize(width: 380, height: 560)
         popover.behavior = .transient
         popover.contentViewController = NSHostingController(
             rootView: PopoverView(
                 serverManager: serverManager,
                 modelManager: modelManager,
                 hfClient: hfClient,
-                pythonEnvManager: pythonEnvManager
+                pythonEnvManager: pythonEnvManager,
+                memoryMonitor: memoryMonitor
             )
         )
 
@@ -41,6 +45,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         Task {
+            memoryNotifier.requestPermission()
+            memoryMonitor.startMonitoring()
+            startMemoryWarningCheck()
             await pythonEnvManager.setupIfNeeded()
             await modelManager.refreshModels()
             await autoStartIfConfigured()
@@ -48,7 +55,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationWillTerminate(_ notification: Notification) {
+        memoryMonitor.stopMonitoring()
+        memoryCheckTimer?.invalidate()
         serverManager.stop()
+        serverManager.killOrphanedMLXProcesses()
         if let monitor = eventMonitor {
             NSEvent.removeMonitor(monitor)
         }
@@ -82,6 +92,18 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         if !modelManager.installedModels.isEmpty {
             await serverManager.start(model: model)
+        }
+    }
+
+    private func startMemoryWarningCheck() {
+        memoryCheckTimer = Timer.scheduledTimer(withTimeInterval: 10.0, repeats: true) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                guard let self else { return }
+                self.memoryNotifier.checkAndNotify(
+                    warningLevel: self.memoryMonitor.warningLevel,
+                    isServerRunning: self.serverManager.isRunning
+                )
+            }
         }
     }
 }

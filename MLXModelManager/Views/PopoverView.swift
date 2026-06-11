@@ -5,6 +5,7 @@ struct PopoverView: View {
     let modelManager: ModelManager
     let hfClient: HuggingFaceClient
     let pythonEnvManager: PythonEnvManager
+    let memoryMonitor: SystemMemoryMonitor
 
     @State private var selectedTab: Tab = .models
 
@@ -22,9 +23,13 @@ struct PopoverView: View {
         }
     }
 
+    private var showLogPanel: Bool {
+        serverManager.isActive
+    }
+
     var body: some View {
         VStack(spacing: 0) {
-            ServerStatusView(serverManager: serverManager)
+            ServerStatusView(serverManager: serverManager, memoryMonitor: memoryMonitor)
 
             Divider()
 
@@ -36,7 +41,7 @@ struct PopoverView: View {
                 VStack(spacing: 10) {
                     switch selectedTab {
                     case .models:
-                        ModelListView(modelManager: modelManager, serverManager: serverManager)
+                        ModelListView(modelManager: modelManager, serverManager: serverManager, memoryMonitor: memoryMonitor)
                     case .download:
                         DownloadView(
                             hfClient: hfClient,
@@ -47,15 +52,22 @@ struct PopoverView: View {
                     case .settings:
                         SettingsView(
                             serverManager: serverManager,
-                            pythonEnvManager: pythonEnvManager
+                            pythonEnvManager: pythonEnvManager,
+                            memoryMonitor: memoryMonitor
                         )
                     }
                 }
                 .padding(.vertical, 8)
             }
-            .frame(maxHeight: 400)
+            .frame(maxHeight: showLogPanel ? 280 : 400)
+
+            LogPanelView(
+                serverManager: serverManager,
+                isVisible: showLogPanel
+            )
         }
-        .frame(width: 340)
+        .frame(width: 380)
+        .animation(.easeInOut(duration: 0.25), value: showLogPanel)
     }
 }
 

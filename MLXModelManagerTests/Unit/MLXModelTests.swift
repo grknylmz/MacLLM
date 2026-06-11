@@ -79,36 +79,42 @@ struct MLXModelTests {
     func testParameterCount35B() {
         let model = MLXModel(fullName: "org/Qwen3.6-35B-A3B-4bit")
         #expect(model.parameterCount == "35B")
+        #expect(model.parameterCountNumeric == 35)
     }
 
     @Test("Detects parameter count 27B")
     func testParameterCount27B() {
         let model = MLXModel(fullName: "org/Qwen3.5-27B-4bit")
         #expect(model.parameterCount == "27B")
+        #expect(model.parameterCountNumeric == 27)
     }
 
     @Test("Detects parameter count 14B")
     func testParameterCount14B() {
         let model = MLXModel(fullName: "org/Phi-4-14B-4bit")
         #expect(model.parameterCount == "14B")
+        #expect(model.parameterCountNumeric == 14)
     }
 
     @Test("Detects parameter count 12B")
     func testParameterCount12B() {
         let model = MLXModel(fullName: "org/gemma-4-12B-it-8bit")
         #expect(model.parameterCount == "12B")
+        #expect(model.parameterCountNumeric == 12)
     }
 
     @Test("Detects parameter count 8B")
     func testParameterCount8B() {
         let model = MLXModel(fullName: "org/llama-3-8b-4bit")
         #expect(model.parameterCount == "8B")
+        #expect(model.parameterCountNumeric == 8)
     }
 
     @Test("Detects parameter count 7B")
     func testParameterCount7B() {
         let model = MLXModel(fullName: "org/mistral-7b-4bit")
         #expect(model.parameterCount == "7B")
+        #expect(model.parameterCountNumeric == 7)
     }
 
     @Test("Detects parameter count 4B")
@@ -121,24 +127,28 @@ struct MLXModelTests {
     func testParameterCount3B() {
         let model = MLXModel(fullName: "org/phi-3b-fp16")
         #expect(model.parameterCount == "3B")
+        #expect(model.parameterCountNumeric == 3)
     }
 
     @Test("Detects parameter count 1.5B when no larger match")
     func testParameterCount1_5B() {
         let model = MLXModel(fullName: "org/qwen-1.5b")
         #expect(model.parameterCount == "1.5B")
+        #expect(model.parameterCountNumeric == 1.5)
     }
 
     @Test("Detects parameter count 0.5B when no larger match")
     func testParameterCount0_5B() {
         let model = MLXModel(fullName: "org/tiny-0.5b")
         #expect(model.parameterCount == "0.5B")
+        #expect(model.parameterCountNumeric == 0.5)
     }
 
     @Test("No parameter count detected when none present")
     func testNoParameterCount() {
         let model = MLXModel(fullName: "org/some-random-model")
         #expect(model.parameterCount == nil)
+        #expect(model.parameterCountNumeric == nil)
     }
 
     @Test("Parameter count detection is case insensitive")
@@ -242,5 +252,132 @@ struct MLXModelTests {
         let model = MLXModel(fullName: "org/subdir/model-name")
         #expect(model.organization == "org")
         #expect(model.name == "subdir/model-name")
+    }
+
+    @Test("Detects parameter count 70B")
+    func testParameterCount70B() {
+        let model = MLXModel(fullName: "org/llama-70B-fp16")
+        #expect(model.parameterCount == "70B")
+        #expect(model.parameterCountNumeric == 70)
+    }
+
+    @Test("Detects parameter count 123B")
+    func testParameterCount123B() {
+        let model = MLXModel(fullName: "org/model-123b-4bit")
+        #expect(model.parameterCount == "123B")
+        #expect(model.parameterCountNumeric == 123)
+    }
+
+    @Test("estimatedRAMGB for 4-bit model")
+    func testEstimatedRAM4Bit() {
+        let model = MLXModel(fullName: "org/model-8b-4bit")
+        let ram = model.estimatedRAMGB
+        #expect(ram != nil)
+        if let ram {
+            #expect(ram > 3.5, "8B 4-bit should be ~4.8 GB")
+            #expect(ram < 6.0)
+        }
+    }
+
+    @Test("estimatedRAMGB for 8-bit model")
+    func testEstimatedRAM8Bit() {
+        let model = MLXModel(fullName: "org/model-8b-8bit")
+        let ram = model.estimatedRAMGB
+        #expect(ram != nil)
+        if let ram {
+            #expect(ram > 7.0, "8B 8-bit should be ~9.6 GB")
+            #expect(ram < 12.0)
+        }
+    }
+
+    @Test("estimatedRAMGB for FP16 model")
+    func testEstimatedRAMFP16() {
+        let model = MLXModel(fullName: "org/model-7b-fp16")
+        let ram = model.estimatedRAMGB
+        #expect(ram != nil)
+        if let ram {
+            #expect(ram > 13.0, "7B FP16 should be ~16.8 GB")
+            #expect(ram < 20.0)
+        }
+    }
+
+    @Test("estimatedRAMGB is nil when no parameter count")
+    func testEstimatedRAMNoParams() {
+        let model = MLXModel(fullName: "org/model-no-size")
+        #expect(model.estimatedRAMGB == nil)
+    }
+
+    @Test("formattedEstimatedRAM returns GB string")
+    func testFormattedEstimatedRAMGB() {
+        let model = MLXModel(fullName: "org/model-8b-4bit")
+        let formatted = model.formattedEstimatedRAM
+        #expect(formatted != nil)
+        #expect(formatted?.contains("GB") == true)
+    }
+
+    @Test("formattedEstimatedRAM returns nil when no params")
+    func testFormattedEstimatedRAMNil() {
+        let model = MLXModel(fullName: "org/model")
+        #expect(model.formattedEstimatedRAM == nil)
+    }
+
+    @Test("architecture defaults to nil")
+    func testArchitectureDefault() {
+        let model = MLXModel(fullName: "org/model")
+        #expect(model.architecture == nil)
+    }
+
+    @Test("lastRunAt persists to UserDefaults")
+    func testLastRunAt() {
+        let key = "test_model_\(UUID().uuidString)"
+        var model = MLXModel(fullName: key)
+        #expect(model.lastRunAt == nil)
+
+        let now = Date()
+        model.lastRunAt = now
+
+        let stored = UserDefaults.standard.double(forKey: "lastRun_\(key)")
+        #expect(stored > 0)
+
+        model.lastRunAt = nil
+        let cleared = UserDefaults.standard.double(forKey: "lastRun_\(key)")
+        #expect(cleared == 0)
+    }
+
+    @Test("relativeLastRun returns nil when never run")
+    func testRelativeLastRunNil() {
+        let model = MLXModel(fullName: "org/never-run-model-\(UUID().uuidString)")
+        #expect(model.relativeLastRun == nil)
+    }
+
+    @Test("relativeLastRun returns 'Just now' for recent date")
+    func testRelativeLastRunJustNow() {
+        var model = MLXModel(fullName: "org/recent-model-\(UUID().uuidString)")
+        model.lastRunAt = Date()
+        #expect(model.relativeLastRun == "Just now")
+    }
+
+    @Test("relativeLastRun returns minutes ago")
+    func testRelativeLastRunMinutes() {
+        var model = MLXModel(fullName: "org/min-model-\(UUID().uuidString)")
+        model.lastRunAt = Date().addingTimeInterval(-120)
+        let rel = model.relativeLastRun
+        #expect(rel == "2m ago")
+    }
+
+    @Test("relativeLastRun returns hours ago")
+    func testRelativeLastRunHours() {
+        var model = MLXModel(fullName: "org/hour-model-\(UUID().uuidString)")
+        model.lastRunAt = Date().addingTimeInterval(-7200)
+        let rel = model.relativeLastRun
+        #expect(rel == "2h ago")
+    }
+
+    @Test("relativeLastRun returns days ago")
+    func testRelativeLastRunDays() {
+        var model = MLXModel(fullName: "org/day-model-\(UUID().uuidString)")
+        model.lastRunAt = Date().addingTimeInterval(-172800)
+        let rel = model.relativeLastRun
+        #expect(rel == "2d ago")
     }
 }

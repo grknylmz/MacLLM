@@ -39,6 +39,34 @@ struct ModelManagerIntegrationTests {
         return testDir
     }
 
+    private func setupTestCacheWithConfig(modelType: String? = nil, architecture: String? = nil) throws -> URL {
+        let testDir = fm.temporaryDirectory
+            .appendingPathComponent("mlx-test-hf-cache-\(UUID().uuidString)")
+
+        try fm.createDirectory(at: testDir, withIntermediateDirectories: true)
+
+        let modelName = "models--org--test-model-4bit"
+        let modelDir = testDir.appendingPathComponent(modelName)
+        let snapshotsDir = modelDir.appendingPathComponent("snapshots").appendingPathComponent("abc123")
+        try fm.createDirectory(at: snapshotsDir, withIntermediateDirectories: true)
+
+        let fileURL = snapshotsDir.appendingPathComponent("model.safetensors")
+        try Data(repeating: 0xAB, count: 1024).write(to: fileURL)
+
+        var configDict: [String: Any] = [:]
+        if let mt = modelType {
+            configDict["model_type"] = mt
+        }
+        if let arch = architecture {
+            configDict["architectures"] = [arch]
+        }
+        let configURL = snapshotsDir.appendingPathComponent("config.json")
+        let configData = try JSONSerialization.data(withJSONObject: configDict)
+        try configData.write(to: configURL)
+
+        return testDir
+    }
+
     private func cleanupTestCache(_ url: URL) {
         try? fm.removeItem(at: url)
     }
@@ -48,11 +76,8 @@ struct ModelManagerIntegrationTests {
         let manager = ModelManager()
         let nonExistent = fm.temporaryDirectory.appendingPathComponent("nonexistent-\(UUID().uuidString)")
 
-        let originalCache = Constants.hfCacheURL
-        // We can't modify Constants, so we test with a direct check
         await manager.refreshModels()
 
-        // If the real HF cache doesn't exist, should be empty
         if !fm.fileExists(atPath: Constants.hfCacheURL.path) {
             #expect(manager.installedModels.isEmpty)
         }
@@ -65,7 +90,6 @@ struct ModelManagerIntegrationTests {
 
         let manager = ModelManager()
 
-        // Create models directly in the test cache structure
         let contents = try fm.contentsOfDirectory(at: testURL, includingPropertiesForKeys: [.fileSizeKey])
         var models: [MLXModel] = []
 
@@ -173,11 +197,9 @@ struct ModelManagerIntegrationTests {
         model.isDownloaded = true
         manager.installedModels = [model]
 
-        // Point to test cache
         let cacheName = "models--" + model.fullName.replacingOccurrences(of: "/", with: "--")
         let modelDir = testURL.appendingPathComponent(cacheName)
 
-        // Manually delete since we're testing state management
         #expect(manager.isDeleting == false)
         #expect(manager.deletingModelId == nil)
 
@@ -208,5 +230,65 @@ struct ModelManagerIntegrationTests {
 
         #expect(modelDirs.count == 3)
         #expect(nonModelDirs.count == 1)
+    }
+
+    @Test("markModelRun sets lastRunAt timestamp on matching model")
+    func testMarkModelRun() {
+        let manager = ModelManager()
+        var model = MLXModel(fullName: "org/test-model-\(UUID().uuidString)")
+        model.isDownloaded = true
+        manager.installedModels = [model]
+
+        #expect(manager.installedModels[0].lastRunAt == nil)
+
+        manager.markModelRun(model.fullName)
+
+        #expect(manager.installedModels[0].lastRunAt != nil)
+        let runDate = manager.installedModels[0].lastRunAt!
+        #expect(Date().timeIntervalSince(runDate) < 2.0)
+    }
+
+    @Test("markModelRun does nothing for nonexistent model")
+    func testMarkModelRunNonexistent() {
+        let manager = ModelManager()
+        let model = MLXModel(fullName: "org/existing-model")
+        manager.installedModels = [model]
+
+        manager.markModelRun("org/nonexistent-model")
+
+        #expect(manager.installedModels[0].lastRunAt == nil)
+    }
+
+    @Test("readArchitecture extracts model_type from config.json")
+    func testReadArchitectureFromConfig() throws {
+        let testURL = try setupTestCacheWithConfig(modelType: "llama")
+
+        defer { cleanupTestCache(testURL) }
+
+        let modelDir = testURL.appendingPathComponent("models--org--test-model-4bit")
+        let snapshotsDir = modelDir.appendingPathComponent("snapshots").appendingPathComponent("abc123")
+        let configURL = snapshotsDir.appendingPathComponent("config.json")
+
+        #expect(fm.fileExists(atPath: configURL.path))
+
+        let data = try Data(contentsOf: configURL)
+        let json = try JSONSerialization.jsonObject(with: data) as? [String: Any]
+        #expect(json?["model_type"] as? String == "llama")
+    }
+
+    @Test("readArchitecture extracts architectures array from config.json")
+    func testReadArchitectureFromArray() throws {
+        let testURL = try setupTestCacheWithConfig(architecture: "LlamaForCausalLM")
+
+        defer { cleanupTestCache(testURL) }
+
+        let modelDir = testURL.appendingPathComponent("models--org--test-model-4bit")
+        let snapshotsDir = modelDir.appendingPathComponent("snapshots").appendingPathComponent("abc123")
+        let configURL = snapshotsDir.appendingPathComponent("config.json")
+
+        let data = try Data(contentsOf: configURL)
+        let json = try JSONSerialization.jsonObject(with: data) as? [String: Any]
+        let archs = json?["architectures"] as? [String]
+        #expect(archs?.first == "LlamaForCausalLM")
     }
 }

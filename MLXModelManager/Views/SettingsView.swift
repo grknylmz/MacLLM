@@ -6,6 +6,7 @@ struct SettingsView: View {
     @AppStorage("launchAtLogin") private var launchAtLogin: Bool = false
     @AppStorage("autoStartServer") private var autoStartServer: Bool = false
     var pythonEnvManager: PythonEnvManager
+    var memoryMonitor: SystemMemoryMonitor
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -37,6 +38,10 @@ struct SettingsView: View {
                     .font(.system(size: 11))
                     .toggleStyle(.switch)
                     .controlSize(.small)
+
+                Divider()
+
+                MemoryControlsView(memoryMonitor: memoryMonitor, serverManager: serverManager)
 
                 Divider()
 

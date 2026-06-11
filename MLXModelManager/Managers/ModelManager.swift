@@ -46,6 +46,7 @@ class ModelManager {
 
                 var model = MLXModel(fullName: fullName, sizeOnDisk: size)
                 model.isDownloaded = true
+                model.architecture = readArchitecture(from: url)
                 models.append(model)
             }
 
@@ -82,5 +83,32 @@ class ModelManager {
     func modelDirectory(for model: MLXModel) -> URL {
         let cacheName = Constants.hfModelsPrefix + model.fullName.replacingOccurrences(of: "/", with: "--")
         return Constants.hfCacheURL.appendingPathComponent(cacheName)
+    }
+
+    func markModelRun(_ fullName: String) {
+        if let idx = installedModels.firstIndex(where: { $0.fullName == fullName }) {
+            installedModels[idx].lastRunAt = Date()
+        }
+    }
+
+    private func readArchitecture(from modelURL: URL) -> String? {
+        let snapshotURLs = (try? fm.contentsOfDirectory(at: modelURL.appendingPathComponent("snapshots"), includingPropertiesForKeys: [.isDirectoryKey])) ?? []
+        guard let snapshotURL = snapshotURLs.first else { return nil }
+
+        let configURL = snapshotURL.appendingPathComponent("config.json")
+        guard let data = fm.contents(atPath: configURL.path),
+              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+            return nil
+        }
+
+        if let modelType = json["model_type"] as? String {
+            return modelType.uppercased()
+        }
+        if let arch = json["architectures"] as? [String], let first = arch.first {
+            return first
+                .replacingOccurrences(of: "ForCausalLM", with: "")
+                .replacingOccurrences(of: "Model", with: "")
+        }
+        return nil
     }
 }
