@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		05B5A72F15E70DFBCCEB2C3E /* ChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99C194A19DE5F38F273A8361 /* ChatView.swift */; };
 		0ECA889C259BBC1EC4D74F18 /* HFModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22DA8E241A4E37DA8D4A2F28 /* HFModelTests.swift */; };
 		1A577AE703321EB043482E31 /* ServerManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 831F03E97D8D71A5F7911B52 /* ServerManager.swift */; };
 		1D0C4C6A38ECA28DDB23747C /* TopProcessesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA4EA9E1BF4998E558DA1994 /* TopProcessesView.swift */; };
@@ -34,10 +35,12 @@
 		AF7F5F9D58C4F6D2B291CA33 /* MemoryControlsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD29720AB6877C2EC134DBBB /* MemoryControlsView.swift */; };
 		B4F00E9115DC7EE3CCDFCC03 /* SystemMemoryMonitorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F3BB331DE8C6BBFB41642ED /* SystemMemoryMonitorTests.swift */; };
 		C5EE27ED40F96FA92540602C /* ServerManagerIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6C14044E6BDFB1C2E855B832 /* ServerManagerIntegrationTests.swift */; };
+		C7990CED3912F5132ABAB0F4 /* ChatMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 223AF55757B4D71C21BFB88E /* ChatMessage.swift */; };
 		C9494A4A8507289633B195BC /* HuggingFaceClientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83F7B7E7C2A7247D4B6254F6 /* HuggingFaceClientTests.swift */; };
 		D1A216935CA0BDF7423B9A5A /* ProcessInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 478CFC20450DA8BEA09CE64D /* ProcessInfo.swift */; };
 		D46111BE034A719C1D949C7B /* ServerStatusView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F1AF73E1189617D76F655B5 /* ServerStatusView.swift */; };
 		D93BF28C3B238A4498FA7CE4 /* DownloadStateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A22347E5CC17CB32DD62C9AC /* DownloadStateTests.swift */; };
+		DFD9C07AD026B671F5618878 /* ChatManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C5556E96071490FBCCFD88E /* ChatManager.swift */; };
 		E2F1631408EF04FE4C4A9436 /* HFSearchResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A0A3B1C710B256F3710F759 /* HFSearchResult.swift */; };
 		E5704466916277B907F88350 /* ProcessRunner.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE7A481D7A093F734B9AF87E /* ProcessRunner.swift */; };
 		EB9324B40884D313B6422097 /* MemoryWarningNotifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1EFD9B8480F4D090E40BEEA /* MemoryWarningNotifier.swift */; };
@@ -62,8 +65,10 @@
 		029C9F8687C2C8489331521C /* ProcessRunnerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProcessRunnerTests.swift; sourceTree = "<group>"; };
 		07EB0050AFD831406555905F /* ConstantsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConstantsTests.swift; sourceTree = "<group>"; };
 		1FCB0C990DF223F237716D7E /* ModelManagerCleanupTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelManagerCleanupTests.swift; sourceTree = "<group>"; };
+		223AF55757B4D71C21BFB88E /* ChatMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatMessage.swift; sourceTree = "<group>"; };
 		22DA8E241A4E37DA8D4A2F28 /* HFModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HFModelTests.swift; sourceTree = "<group>"; };
 		23A5C171FE5F8407EDDF7E1B /* MLXModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MLXModelTests.swift; sourceTree = "<group>"; };
+		2C5556E96071490FBCCFD88E /* ChatManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatManager.swift; sourceTree = "<group>"; };
 		2E6849D552677075D23BC4BD /* PythonEnvManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PythonEnvManager.swift; sourceTree = "<group>"; };
 		2F3BB331DE8C6BBFB41642ED /* SystemMemoryMonitorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemMemoryMonitorTests.swift; sourceTree = "<group>"; };
 		341ADA49879430076E166E3C /* LogPanelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogPanelView.swift; sourceTree = "<group>"; };
@@ -82,6 +87,7 @@
 		83F7B7E7C2A7247D4B6254F6 /* HuggingFaceClientTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HuggingFaceClientTests.swift; sourceTree = "<group>"; };
 		8A78837942B6CAD042394CF9 /* MacLLMTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MacLLMTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		8A878CFC51FEE375833571B5 /* ModelListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelListView.swift; sourceTree = "<group>"; };
+		99C194A19DE5F38F273A8361 /* ChatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatView.swift; sourceTree = "<group>"; };
 		9B72ABB8CDEA707C266026E0 /* PopoverView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PopoverView.swift; sourceTree = "<group>"; };
 		A22347E5CC17CB32DD62C9AC /* DownloadStateTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadStateTests.swift; sourceTree = "<group>"; };
 		ACD04F86E8CCE955AD75A849 /* ModelManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelManagerTests.swift; sourceTree = "<group>"; };
@@ -162,6 +168,7 @@
 		913F8408319C20E9DFB89001 /* Models */ = {
 			isa = PBXGroup;
 			children = (
+				223AF55757B4D71C21BFB88E /* ChatMessage.swift */,
 				7A0A3B1C710B256F3710F759 /* HFSearchResult.swift */,
 				D3D7F0A74560E91A685E4B7D /* MLXModel.swift */,
 				478CFC20450DA8BEA09CE64D /* ProcessInfo.swift */,
@@ -172,6 +179,7 @@
 		9B62CD7F64EC5445AD07F0FE /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				99C194A19DE5F38F273A8361 /* ChatView.swift */,
 				C850E3B4028227050643BEA6 /* DownloadView.swift */,
 				341ADA49879430076E166E3C /* LogPanelView.swift */,
 				FD29720AB6877C2EC134DBBB /* MemoryControlsView.swift */,
@@ -211,6 +219,7 @@
 		ED84DF85F734BB5BCAEE9636 /* Managers */ = {
 			isa = PBXGroup;
 			children = (
+				2C5556E96071490FBCCFD88E /* ChatManager.swift */,
 				F9B2706FB506BA0668E6E63E /* DownloadManager.swift */,
 				EB659224BFBEA664917ED9FF /* HuggingFaceClient.swift */,
 				6D4E8A54AF09EB9EF686F03C /* ModelManager.swift */,
@@ -322,6 +331,9 @@
 			buildActionMask = 2147483647;
 			files = (
 				96BE5FCB8DA72F0FC6E5077E /* AppDelegate.swift in Sources */,
+				DFD9C07AD026B671F5618878 /* ChatManager.swift in Sources */,
+				C7990CED3912F5132ABAB0F4 /* ChatMessage.swift in Sources */,
+				05B5A72F15E70DFBCCEB2C3E /* ChatView.swift in Sources */,
 				F5125EAFC74BAA979DAE0404 /* Constants.swift in Sources */,
 				21D2BB6DEBC9B38D89EFEA10 /* DownloadManager.swift in Sources */,
 				A0223B865B51B89D58F8DCEC /* DownloadView.swift in Sources */,

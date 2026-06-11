@@ -12,6 +12,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     let memoryMonitor = SystemMemoryMonitor()
     let memoryNotifier = MemoryWarningNotifier()
     lazy var downloadManager = DownloadManager(modelManager: modelManager, serverManager: serverManager)
+    lazy var chatManager = ChatManager(serverManager: serverManager)
 
     private var eventMonitor: Any?
     private var memoryCheckTimer: Timer?
@@ -37,7 +38,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 hfClient: hfClient,
                 pythonEnvManager: pythonEnvManager,
                 memoryMonitor: memoryMonitor,
-                downloadManager: downloadManager
+                downloadManager: downloadManager,
+                chatManager: chatManager
             )
         )
 

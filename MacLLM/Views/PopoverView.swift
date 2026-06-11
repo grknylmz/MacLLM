@@ -7,16 +7,19 @@ struct PopoverView: View {
     let pythonEnvManager: PythonEnvManager
     let memoryMonitor: SystemMemoryMonitor
     let downloadManager: DownloadManager
+    let chatManager: ChatManager
 
     @State private var selectedTab: Tab = .models
 
     enum Tab: String, CaseIterable {
+        case chat = "Chat"
         case models = "Models"
         case download = "Download"
         case settings = "Settings"
 
         var icon: String {
             switch self {
+            case .chat: return "bubble.left.fill"
             case .models: return "cpu"
             case .download: return "arrow.down.circle"
             case .settings: return "gearshape"
@@ -40,6 +43,10 @@ struct PopoverView: View {
 
             ScrollView {
                 ZStack {
+                    ChatView(chatManager: chatManager, serverManager: serverManager)
+                        .opacity(selectedTab == .chat ? 1 : 0)
+                        .frame(height: selectedTab == .chat ? nil : 0)
+
                     ModelListView(modelManager: modelManager, serverManager: serverManager, memoryMonitor: memoryMonitor)
                         .opacity(selectedTab == .models ? 1 : 0)
                         .frame(height: selectedTab == .models ? nil : 0)
