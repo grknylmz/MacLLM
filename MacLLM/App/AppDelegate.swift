@@ -19,7 +19,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
 
         if let button = statusItem.button {
-            let iconImage = NSImage(named: "StatusBarIcon") ?? NSImage(systemSymbolName: "brain", accessibilityDescription: "MacLLM")
+            let iconImage = NSImage(named: "StatusBarIcon") ?? NSImage(systemSymbolName: "brain", accessibilityDescription: "MacLLM")!
             iconImage.size = NSSize(width: 18, height: 18)
             button.image = iconImage
             button.action = #selector(togglePopover)
