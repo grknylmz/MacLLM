@@ -1,0 +1,85 @@
+name: Build macOS DMG
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (e.g. v1.0.0)'
+        required: true
+        type: string
+      prerelease:
+        description: 'Mark as pre-release'
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  build:
+    name: Build & Release DMG
+    runs-on: macos-14
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate Xcode project
+        run: xcodegen generate
+
+      - name: Build archive
+        run: |
+          xcodebuild archive \
+            -project MacLLM.xcodeproj \
+            -scheme MacLLM \
+            -configuration Release \
+            -archivePath build/MacLLM.xcarchive \
+            -destination 'platform=macOS,arch=arm64' \
+            CODE_SIGN_IDENTITY="-" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO \
+            ENABLE_HARDENED_RUNTIME=NO \
+            MACOSX_DEPLOYMENT_TARGET=14.0 \
+            | xcpretty
+
+      - name: Export app from archive
+        run: |
+          mkdir -p build/export
+          cp -R build/MacLLM.xcarchive/Products/Applications/MacLLM.app build/export/
+
+      - name: Create DMG
+        run: |
+          DMG_NAME="MacLLM-${{ inputs.version }}"
+          hdiutil create \
+            -volname "MacLLM" \
+            -srcfolder build/export \
+            -ov \
+            -format UDZO \
+            "build/${DMG_NAME}.dmg"
+
+      - name: Compute SHA256
+        id: sha
+        run: |
+          SHA=$(shasum -a 256 "build/MacLLM-${{ inputs.version }}.dmg" | awk '{print $1}')
+          echo "sha256=${SHA}" >> "$GITHUB_OUTPUT"
+          echo "## SHA256 Checksum" >> "$GITHUB_STEP_SUMMARY"
+          echo "\`${SHA}\`" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ inputs.version }}
+          name: MacLLM ${{ inputs.version }}
+          prerelease: ${{ inputs.prerelease }}
+          generate_release_notes: true
+          body: |
+            ## Installation
+
+            1. Download `MacLLM-${{ inputs.version }}.dmg`
+            2. Open the DMG and drag **MacLLM** to your Applications folder
+            3. On first launch, right-click the app and select **Open** to bypass Gatekeeper
+
+            **SHA256:** \`${{ steps.sha.outputs.sha256 }}\`
+          files: |
+            build/MacLLM-${{ inputs.version }}.dmg
