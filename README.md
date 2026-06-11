@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🧠 MLX Model Manager
+# MacLLM
 
 ### *Run Apple Silicon LLMs with zero friction — right from your menu bar.*
 
@@ -11,13 +11,13 @@
 
 *A native macOS menu bar app for discovering, downloading, and serving MLX-format language models via an OpenAI-compatible API server.*
 
-[🚀 Quick Start](#-quick-start) · [📦 Installation](#-installation) · [✨ Features](#-features-matrix) · [🛠 Developer Guide](#-developer-guide) · [🏗 Architecture](#-architecture)
+[Quick Start](#-quick-start) · [Installation](#-installation) · [Features](#-features-matrix) · [Developer Guide](#-developer-guide) · [Architecture](#-architecture)
 
 </div>
 
 ---
 
-## ✨ Why MLX Model Manager?
+## Why MacLLM?
 
 > Running LLMs on Apple Silicon shouldn't require a terminal PhD.
 
@@ -29,112 +29,112 @@
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 
 | Requirement | Details |
 |---|---|
-| 🍎 **Mac** | Apple Silicon (M1/M2/M3/M4) or later |
-| 🖥 **macOS** | 14.0 (Sonoma) or later |
-| 🐍 **Python** | System Python 3 at `/usr/bin/python3` |
-| 🔧 **Xcode** | 15.0+ with Swift 5.9 |
-| 📦 **XcodeGen** | `brew install xcodegen` |
+| **Mac** | Apple Silicon (M1/M2/M3/M4) or later |
+| **macOS** | 14.0 (Sonoma) or later |
+| **Python** | System Python 3 at `/usr/bin/python3` |
+| **Xcode** | 15.0+ with Swift 5.9 |
+| **XcodeGen** | `brew install xcodegen` |
 
 ### Get Running in 60 Seconds
 
 ```bash
-# 1️⃣  Clone the repo
-git clone https://github.com/your-username/ai-model-manager.git
-cd ai-model-manager/MLXModelManager
+# 1. Clone the repo
+git clone https://github.com/your-username/mac-llm.git
+cd mac-llm
 
-# 2️⃣  Generate the Xcode project
+# 2. Generate the Xcode project
 xcodegen generate
 
-# 3️⃣  Open and run
-open MLXModelManager.xcodeproj
+# 3. Open and run
+open MacLLM.xcodeproj
 ```
 
-Hit **⌘R** in Xcode — the brain icon appears in your menu bar. Click it, and the app will automatically set up a Python virtual environment and install `mlx-lm` on first launch.
+Hit **Cmd+R** in Xcode — the brain icon appears in your menu bar. Click it, and the app will automatically set up a Python virtual environment and install `mlx-lm` on first launch.
 
 ### Your First Model
 
-1. Click the 🧠 icon in your menu bar
+1. Click the brain icon in your menu bar
 2. Switch to the **Download** tab
 3. Search for a model (e.g., `Llama`, `Mistral`, `Phi`) or leave blank for popular picks
-4. Click the ⬇️ download button
+4. Click the download button
 5. Once downloaded, the server starts automatically — visit `http://127.0.0.1:8080`
 
-> **💡 Tip:** Models from the [`mlx-community`](https://huggingface.co/mlx-community) org are pre-converted and work out of the box.
+> **Tip:** Models from the [`mlx-community`](https://huggingface.co/mlx-community) org are pre-converted and work out of the box.
 
 ---
 
-## 📦 Installation
+## Installation
 
 ### Option A: Build from Source (Recommended)
 
 ```bash
-git clone https://github.com/your-username/ai-model-manager.git
-cd ai-model-manager/MLXModelManager
+git clone https://github.com/your-username/mac-llm.git
+cd mac-llm
 
 # Generate Xcode project
 xcodegen generate
 
 # Build & run
-open MLXModelManager.xcodeproj
+open MacLLM.xcodeproj
 ```
 
 ### Option B: Download Pre-built App
 
-> *Coming soon — check the [Releases](https://github.com/your-username/ai-model-manager/releases) page.*
+> *Coming soon — check the [Releases](https://github.com/your-username/mac-llm/releases) page.*
 
 ### What Gets Installed Where?
 
 | Path | Purpose |
 |---|---|
-| `~/.mlx-manager/` | App data directory |
-| `~/.mlx-manager/venv/` | Isolated Python virtual environment |
-| `~/.mlx-manager/venv/bin/mlx_lm.server` | The MLX LM server binary |
+| `~/.macllm/` | App data directory |
+| `~/.macllm/venv/` | Isolated Python virtual environment |
+| `~/.macllm/venv/bin/mlx_lm.server` | The MLX LM server binary |
 | `~/.cache/huggingface/hub/` | Downloaded model weights (shared with `huggingface-cli`) |
 
 ---
 
-## ✨ Features Matrix
+## Features Matrix
 
 ### Core Capabilities
 
 | Feature | Description | Status |
 |---|---|---|
-| 🔍 **HuggingFace Search** | Search the entire HF Hub for MLX models | ✅ |
-| ⬇️ **One-Click Download** | Download models with progress tracking | ✅ |
-| 🗂 **Model Management** | List, inspect, and delete installed models | ✅ |
-| 🚀 **API Server** | Launch OpenAI-compatible server (`mlx_lm.server`) | ✅ |
-| 🔄 **Model Switching** | Hot-swap models without restarting | ✅ |
-| 🌐 **Quick Open** | Open server URL in browser with one click | ✅ |
-| 🔄 **Server Restart** | Restart the server with one click | ✅ |
+| **HuggingFace Search** | Search the entire HF Hub for MLX models | Done |
+| **One-Click Download** | Download models with progress tracking | Done |
+| **Model Management** | List, inspect, and delete installed models | Done |
+| **API Server** | Launch OpenAI-compatible server (`mlx_lm.server`) | Done |
+| **Model Switching** | Hot-swap models without restarting | Done |
+| **Quick Open** | Open server URL in browser with one click | Done |
+| **Server Restart** | Restart the server with one click | Done |
 
 ### Smart Detection
 
 | Detection | How It Works | Status |
 |---|---|---|
-| 🏷 **Quantization** | Auto-detects 4-bit, 8-bit, FP16, BF16 from model name | ✅ |
-| 📊 **Parameter Count** | Parses 0.5B through 35B+ from model metadata | ✅ |
-| 💾 **Disk Usage** | Calculates actual size on disk recursively | ✅ |
-| ✅ **Install State** | Tracks which models are downloaded vs. available | ✅ |
-| 📈 **Download Count** | Shows HF download stats for search results | ✅ |
+| **Quantization** | Auto-detects 4-bit, 8-bit, FP16, BF16 from model name | Done |
+| **Parameter Count** | Parses 0.5B through 35B+ from model metadata | Done |
+| **Disk Usage** | Calculates actual size on disk recursively | Done |
+| **Install State** | Tracks which models are downloaded vs. available | Done |
+| **Download Count** | Shows HF download stats for search results | Done |
 
 ### App Features
 
 | Feature | Description | Status |
 |---|---|---|
-| 🧭 **Menu Bar App** | Lives in macOS status bar, no Dock icon | ✅ |
-| 📋 **Tab Interface** | Models · Download · Settings in a clean popover | ✅ |
-| ⚡ **Auto-Setup** | Creates venv + installs `mlx-lm` on first launch | ✅ |
-| 🔁 **Auto-Start** | Optionally auto-start last model on launch | ✅ |
-| 🚀 **Launch at Login** | macOS login item support | ✅ |
-| ⚙️ **Configurable Port** | Change the server port in Settings | ✅ |
-| 🔧 **Reinstall Env** | One-click reinstall of Python environment | ✅ |
-| 📡 **Live Server Logs** | Real-time server output in the UI | ✅ |
+| **Menu Bar App** | Lives in macOS status bar, no Dock icon | Done |
+| **Tab Interface** | Models / Download / Settings in a clean popover | Done |
+| **Auto-Setup** | Creates venv + installs `mlx-lm` on first launch | Done |
+| **Auto-Start** | Optionally auto-start last model on launch | Done |
+| **Launch at Login** | macOS login item support | Done |
+| **Configurable Port** | Change the server port in Settings | Done |
+| **Reinstall Env** | One-click reinstall of Python environment | Done |
+| **Live Server Logs** | Real-time server output in the UI | Done |
 
 ### API Compatibility
 
@@ -157,38 +157,38 @@ curl http://127.0.0.1:8080/v1/models
 
 ---
 
-## 🏗 Architecture
+## Architecture
 
 ```
-MLXModelManager/
-├── 📱 App
-│   ├── MLXModelManagerApp.swift    # SwiftUI app entry point
-│   └── AppDelegate.swift           # Menu bar + popover lifecycle
+MacLLM/
+├── App
+│   ├── MacLLMApp.swift           # SwiftUI app entry point
+│   └── AppDelegate.swift         # Menu bar + popover lifecycle
 │
-├── 🎨 Views
-│   ├── PopoverView.swift           # Main tab container
-│   ├── ServerStatusView.swift      # Server status bar with controls
-│   ├── ModelListView.swift         # Installed models list
-│   ├── DownloadView.swift          # HF search + download UI
-│   └── SettingsView.swift          # Port, auto-start, env config
+├── Views
+│   ├── PopoverView.swift          # Main tab container
+│   ├── ServerStatusView.swift     # Server status bar with controls
+│   ├── ModelListView.swift        # Installed models list
+│   ├── DownloadView.swift         # HF search + download UI
+│   └── SettingsView.swift         # Port, auto-start, env config
 │
-├── ⚙️ Managers
-│   ├── ServerManager.swift         # Process lifecycle for mlx_lm.server
-│   ├── ModelManager.swift          # Installed model discovery & deletion
-│   ├── HuggingFaceClient.swift     # HF Hub API search client
-│   └── PythonEnvManager.swift      # venv + pip setup automation
+├── Managers
+│   ├── ServerManager.swift        # Process lifecycle for mlx_lm.server
+│   ├── ModelManager.swift         # Installed model discovery & deletion
+│   ├── HuggingFaceClient.swift    # HF Hub API search client
+│   └── PythonEnvManager.swift     # venv + pip setup automation
 │
-├── 🗃 Models
-│   ├── MLXModel.swift              # Local model representation
-│   └── HFSearchResult.swift        # HuggingFace API response models
+├── Models
+│   ├── MLXModel.swift             # Local model representation
+│   └── HFSearchResult.swift       # HuggingFace API response models
 │
-├── 🔧 Utilities
-│   ├── Constants.swift             # Paths, defaults, config values
-│   └── ProcessRunner.swift         # Async process execution engine
+├── Utilities
+│   ├── Constants.swift            # Paths, defaults, config values
+│   └── ProcessRunner.swift        # Async process execution engine
 │
-└── 🧪 Tests
-    ├── Unit/                       # Unit tests per component
-    └── Integration/                # Integration tests for managers
+└── Tests
+    ├── Unit/                      # Unit tests per component
+    └── Integration/               # Integration tests for managers
 ```
 
 ### Key Design Decisions
@@ -197,13 +197,13 @@ MLXModelManager/
 |---|---|
 | **SwiftUI + Observation** | Modern `@Observable` macro for reactive state |
 | **Menu bar app (no Dock)** | Non-intrusive, always available, minimal screen space |
-| **Separate Python venv** | Isolated env at `~/.mlx-manager/venv/` — no system pollution |
+| **Separate Python venv** | Isolated env at `~/.macllm/venv/` — no system pollution |
 | **HF cache reuse** | Uses standard `~/.cache/huggingface/hub/` for model storage |
 | **Process-based server** | Runs `mlx_lm.server` as a child `Process` for clean lifecycle control |
 
 ---
 
-## 🛠 Developer Guide
+## Developer Guide
 
 ### Project Setup
 
@@ -221,11 +221,11 @@ xcodegen generate
 
 ```bash
 # Open in Xcode
-open MLXModelManager.xcodeproj
+open MacLLM.xcodeproj
 
 # Or build from CLI
-xcodebuild -project MLXModelManager.xcodeproj \
-  -scheme MLXModelManager \
+xcodebuild -project MacLLM.xcodeproj \
+  -scheme MacLLM \
   -configuration Debug build
 ```
 
@@ -233,21 +233,21 @@ xcodebuild -project MLXModelManager.xcodeproj \
 
 ```bash
 # Run all tests
-xcodebuild test -project MLXModelManager.xcodeproj \
-  -scheme MLXModelManagerTests \
+xcodebuild test -project MacLLM.xcodeproj \
+  -scheme MacLLMTests \
   -destination 'platform=macOS'
 
 # Run only unit tests
-xcodebuild test -project MLXModelManager.xcodeproj \
-  -scheme MLXModelManagerTests \
-  -only-testing:MLXModelManagerTests/UnitTests
+xcodebuild test -project MacLLM.xcodeproj \
+  -scheme MacLLMTests \
+  -only-testing:MacLLMTests/UnitTests
 ```
 
 ### Test Structure
 
 ```
-MLXModelManagerTests/
-├── 📁 Unit/
+MacLLMTests/
+├── Unit/
 │   ├── HuggingFaceClientTests.swift   # HF API client tests
 │   ├── MLXModelTests.swift            # Model parsing & detection
 │   ├── ServerManagerTests.swift       # Server lifecycle tests
@@ -255,7 +255,7 @@ MLXModelManagerTests/
 │   ├── ProcessResultTests.swift       # Result parsing tests
 │   └── ConstantsTests.swift           # Path resolution tests
 │
-└── 📁 Integration/
+└── Integration/
     ├── ModelManagerTests.swift         # Full model management flow
     ├── ServerManagerIntegrationTests.swift  # Real server start/stop
     └── PythonEnvManagerTests.swift     # Full env setup flow
@@ -263,18 +263,18 @@ MLXModelManagerTests/
 
 ### Adding a New View
 
-1. Create `MLXModelManager/Views/MyNewView.swift`
+1. Create `MacLLM/Views/MyNewView.swift`
 2. Use `@Observable` classes from `Managers/` for state
 3. Run `xcodegen generate` to update the project
 4. Integrate into `PopoverView.swift`
 
 ### Adding a New Manager
 
-1. Create `MLXModelManager/Managers/MyManager.swift`
+1. Create `MacLLM/Managers/MyManager.swift`
 2. Annotate with `@Observable @MainActor`
 3. Instantiate in `AppDelegate.swift`
 4. Pass through `PopoverView` to the views that need it
-5. Add corresponding tests in `MLXModelManagerTests/`
+5. Add corresponding tests in `MacLLMTests/`
 
 ### Adding Dependencies
 
@@ -297,19 +297,19 @@ xcodegen generate
 
 ---
 
-## 🗺 Roadmap
+## Roadmap
 
-- [ ] 🎙️ Chat UI — built-in conversation interface
-- [ ] 📦 Drag & drop model import
-- [ ] 📊 System resource monitoring (RAM, GPU)
-- [ ] 🔄 Model versioning & update detection
-- [ ] 🌍 Multi-language support
-- [ ] 📱 Shortcuts / Automator integration
-- [ ] 🐙 Homebrew Cask distribution
+- [ ] Chat UI — built-in conversation interface
+- [ ] Drag & drop model import
+- [ ] System resource monitoring (RAM, GPU)
+- [ ] Model versioning & update detection
+- [ ] Multi-language support
+- [ ] Shortcuts / Automator integration
+- [ ] Homebrew Cask distribution
 
 ---
 
-## 🤝 Contributing
+## Contributing
 
 Contributions are welcome! Here's how:
 
@@ -328,7 +328,7 @@ Contributions are welcome! Here's how:
 
 ---
 
-## 📄 License
+## License
 
 This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
 
@@ -336,7 +336,7 @@ This project is licensed under the MIT License — see the [LICENSE](LICENSE) fi
 
 <div align="center">
 
-**Built with ❤️ for the Apple Silicon community**
+**Built for the Apple Silicon community**
 
 *Powered by [MLX](https://github.com/ml-explore/mlx) · [mlx-lm](https://github.com/ml-explore/mlx-lm) · [HuggingFace](https://huggingface.co)*
 
