@@ -18,10 +18,13 @@ private struct FailableDecodable<T: Decodable>: Decodable {
 }
 
 struct HFModel: Decodable, Identifiable {
-    let id: String
+    var id: String { modelId }
+    let internalId: String
     let modelId: String
     let author: String?
     let downloads: Int?
+    let likes: Int?
+    let trendingScore: Int?
     let tags: [String]?
     let pipelineTag: String?
     let createdAt: String?
@@ -31,7 +34,7 @@ struct HFModel: Decodable, Identifiable {
     let cardData: HFCardData?
 
     var displayName: String {
-        id
+        modelId
     }
 
     var formattedDownloads: String {
@@ -44,11 +47,23 @@ struct HFModel: Decodable, Identifiable {
         return "\(d)"
     }
 
+    var formattedLikes: String {
+        guard let l = likes else { return "" }
+        if l >= 1_000_000 {
+            return String(format: "%.1fM", Double(l) / 1_000_000)
+        } else if l >= 1_000 {
+            return String(format: "%.1fK", Double(l) / 1_000)
+        }
+        return "\(l)"
+    }
+
     enum CodingKeys: String, CodingKey {
-        case id = "_id"
+        case internalId = "_id"
         case modelId
         case author
         case downloads
+        case likes
+        case trendingScore
         case tags
         case pipelineTag = "pipeline_tag"
         case createdAt

@@ -1,18 +1,47 @@
 import SwiftUI
+import os
+
+private let downloadLog = Logger(subsystem: "com.macllm", category: "Download")
+
+func debugLog(_ message: String) {
+    let timestamp = DateFormatter.localizedString(from: Date(), dateStyle: .none, timeStyle: .medium)
+    let line = "[\(timestamp)] \(message)\n"
+    let logURL = FileManager.default.homeDirectoryForCurrentUser
+        .appendingPathComponent(".macllm/download_debug.log")
+    if let data = line.data(using: .utf8) {
+        if FileManager.default.fileExists(atPath: logURL.path) {
+            if let handle = try? FileHandle(forWritingTo: logURL) {
+                handle.seekToEndOfFile()
+                handle.write(data)
+                handle.closeFile()
+            }
+        } else {
+            try? data.write(to: logURL)
+        }
+    }
+    downloadLog.info("\(message)")
+}
 
 struct DownloadView: View {
     let hfClient: HuggingFaceClient
     let modelManager: ModelManager
     let serverManager: ServerManager
     let pythonEnvManager: PythonEnvManager
+    let downloadManager: DownloadManager
 
     @State private var searchText = ""
-    @State private var downloadProgress: [String: Double] = [:]
-    @State private var downloadingModels: Set<String> = []
-    @State private var downloadTask: Task<Void, Never>?
+    @State private var searchTask: Task<Void, Never>?
+    @State private var showFilters = false
+    @State private var sortOption: HFSortOption = .trending
+    @State private var taskFilter: HFTaskFilter = .all
+    @State private var libraryFilter: HFLibraryFilter = .all
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
+            activeDownloadsSection
+
+            Divider().padding(.horizontal, 8)
+
             Text("DOWNLOAD NEW MODEL")
                 .font(.system(size: 10, weight: .bold))
                 .foregroundStyle(.secondary)
@@ -37,15 +66,32 @@ struct DownloadView: View {
                 .cornerRadius(6)
 
                 Button {
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        showFilters.toggle()
+                    }
+                } label: {
+                    Image(systemName: showFilters ? "line.3.horizontal.decrease.circle.fill" : "line.3.horizontal.decrease.circle")
+                        .font(.system(size: 14))
+                        .foregroundStyle(hasActiveFilters ? .blue : .secondary)
+                }
+                .buttonStyle(.plain)
+                .help("Filters")
+
+                Button {
                     performSearch()
                 } label: {
                     Image(systemName: "arrow.right.circle.fill")
                         .font(.system(size: 14))
                 }
                 .buttonStyle(.plain)
-                .disabled(searchText.isEmpty)
+                .disabled(searchText.isEmpty && !hasActiveFilters)
             }
             .padding(.horizontal, 12)
+
+            if showFilters {
+                filterBar
+                    .transition(.opacity.combined(with: .move(edge: .top)))
+            }
 
             if hfClient.isSearching {
                 HStack {
@@ -64,11 +110,25 @@ struct DownloadView: View {
                         ForEach(hfClient.searchResults) { model in
                             HFModelRow(
                                 model: model,
-                                isDownloading: downloadingModels.contains(model.id),
-                                progress: downloadProgress[model.id] ?? 0,
+                                state: downloadManager.state(for: model.id),
                                 isInstalled: isModelInstalled(model.id),
                                 onDownload: {
-                                    downloadModel(model.id)
+                                    downloadManager.startDownload(model.id)
+                                },
+                                onPause: {
+                                    downloadManager.pauseDownload(model.id)
+                                },
+                                onResume: {
+                                    downloadManager.resumeDownload(model.id)
+                                },
+                                onStop: {
+                                    downloadManager.stopDownload(model.id)
+                                },
+                                onRestart: {
+                                    downloadManager.startDownload(model.id)
+                                },
+                                onClear: {
+                                    downloadManager.clearDownload(model.id)
                                 }
                             )
                         }
@@ -85,76 +145,333 @@ struct DownloadView: View {
         }
     }
 
-    private func performSearch() {
-        downloadTask?.cancel()
-        downloadTask = Task {
-            if searchText.contains("/") {
-                await hfClient.search(query: searchText)
-            } else if searchText.isEmpty {
-                await hfClient.searchPopularMLX()
-            } else {
-                await hfClient.search(query: searchText)
+    private var hasActiveFilters: Bool {
+        sortOption != .trending || taskFilter != .all || libraryFilter != .all
+    }
+
+    @ViewBuilder
+    private var filterBar: some View {
+        VStack(spacing: 6) {
+            HStack(spacing: 8) {
+                filterPicker(
+                    title: "Sort",
+                    selection: $sortOption,
+                    options: HFSortOption.allCases
+                )
+
+                filterPicker(
+                    title: "Task",
+                    selection: $taskFilter,
+                    options: HFTaskFilter.allCases
+                )
+
+                filterPicker(
+                    title: "Library",
+                    selection: $libraryFilter,
+                    options: HFLibraryFilter.allCases
+                )
+
+                Spacer()
+
+                if hasActiveFilters {
+                    Button("Reset") {
+                        sortOption = .trending
+                        taskFilter = .all
+                        libraryFilter = .all
+                        performSearch()
+                    }
+                    .font(.system(size: 9))
+                    .foregroundStyle(.blue)
+                    .buttonStyle(.plain)
+                }
             }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 4)
+        }
+        .background(.gray.opacity(0.04))
+        .cornerRadius(6)
+        .padding(.horizontal, 12)
+    }
+
+    private func filterPicker<T: RawRepresentable & CaseIterable & Hashable>(
+        title: String,
+        selection: Binding<T>,
+        options: T.AllCases
+    ) -> some View where T.RawValue == String {
+        Menu {
+            ForEach(Array(options), id: \.rawValue) { option in
+                Button {
+                    selection.wrappedValue = option
+                    performSearch()
+                } label: {
+                    if selection.wrappedValue.rawValue == option.rawValue {
+                        Image(systemName: "checkmark")
+                    }
+                    Text(option.rawValue)
+                }
+            }
+        } label: {
+            HStack(spacing: 3) {
+                Text(title)
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundStyle(.secondary)
+                Text(selection.wrappedValue.rawValue)
+                    .font(.system(size: 10))
+                    .foregroundStyle(.primary)
+                    .lineLimit(1)
+                Image(systemName: "chevron.down")
+                    .font(.system(size: 8))
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .menuStyle(.borderlessButton)
+    }
+
+    @ViewBuilder
+    private var activeDownloadsSection: some View {
+        let active = downloadManager.downloads.filter { $0.value.isActive || $0.value.isFailed }
+        let completed = downloadManager.completedDownloads.filter { downloadManager.downloads[$0]?.isCompleted == true }
+
+        if !active.isEmpty || !completed.isEmpty {
+            VStack(alignment: .leading, spacing: 4) {
+                Text("ACTIVE DOWNLOADS")
+                    .font(.system(size: 10, weight: .bold))
+                    .foregroundStyle(.secondary)
+                    .padding(.horizontal, 12)
+
+                ScrollView {
+                    LazyVStack(spacing: 2) {
+                        ForEach(active.sorted(by: { $0.key < $1.key }), id: \.key) { modelId, state in
+                            ActiveDownloadRow(
+                                modelId: modelId,
+                                state: state,
+                                onPause: { downloadManager.pauseDownload(modelId) },
+                                onResume: { downloadManager.resumeDownload(modelId) },
+                                onStop: { downloadManager.stopDownload(modelId) },
+                                onRestart: { downloadManager.startDownload(modelId) },
+                                onClear: { downloadManager.clearDownload(modelId) }
+                            )
+                        }
+
+                        ForEach(completed, id: \.self) { modelId in
+                            ActiveDownloadRow(
+                                modelId: modelId,
+                                state: .completed,
+                                onPause: {},
+                                onResume: {},
+                                onStop: {},
+                                onRestart: {},
+                                onClear: { downloadManager.clearDownload(modelId) }
+                            )
+                        }
+                    }
+                    .padding(.horizontal, 6)
+                }
+                .frame(maxHeight: 120)
+            }
+        }
+    }
+
+    private func performSearch() {
+        searchTask?.cancel()
+        debugLog("performSearch: query='\(searchText)' sort=\(sortOption.rawValue) task=\(taskFilter.rawValue) library=\(libraryFilter.rawValue)")
+        searchTask = Task {
+            await hfClient.search(
+                query: searchText,
+                sort: sortOption,
+                task: taskFilter,
+                library: libraryFilter
+            )
+            debugLog("Search completed. Results: \(hfClient.searchResults.count), error: \(hfClient.error ?? "nil")")
         }
     }
 
     private func isModelInstalled(_ modelId: String) -> Bool {
         modelManager.installedModels.contains { $0.fullName == modelId }
     }
+}
 
-    private func downloadModel(_ modelId: String) {
-        guard pythonEnvManager.isReady else { return }
-        downloadingModels.insert(modelId)
-        downloadProgress[modelId] = 0
+struct ActiveDownloadRow: View {
+    let modelId: String
+    let state: DownloadState
+    let onPause: () -> Void
+    let onResume: () -> Void
+    let onStop: () -> Void
+    let onRestart: () -> Void
+    let onClear: () -> Void
 
-        Task {
-            let cacheName = Constants.hfModelsPrefix + modelId.replacingOccurrences(of: "/", with: "--")
-            let modelCacheURL = Constants.hfCacheURL.appendingPathComponent(cacheName)
+    var body: some View {
+        HStack(spacing: 6) {
+            statusIcon
 
-            let hfDownloadPath = Constants.venvURL
-                .appendingPathComponent("bin/huggingface-cli")
-                .path
+            VStack(alignment: .leading, spacing: 1) {
+                Text(modelId)
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundStyle(.primary)
+                    .lineLimit(1)
 
-            let result = try? await ProcessRunner.runWithOutput(
-                executable: hfDownloadPath,
-                arguments: ["download", modelId],
-                onStdout: { output in
-                    if output.contains("Fetching") || output.contains("Download") {
-                        let patterns = ["(\\d+\\.?\\d*)%", "(\\d+)/(\\d+)"]
-                        for pattern in patterns {
-                            if let regex = try? NSRegularExpression(pattern: pattern),
-                               let match = regex.firstMatch(in: output, range: NSRange(output.startIndex..., in: output)) {
-                                if pattern == patterns[0] {
-                                    if let range = Range(match.range(at: 1), in: output),
-                                       let value = Double(output[range]) {
-                                        downloadProgress[modelId] = value / 100.0
-                                    }
-                                }
-                            }
-                        }
-                    }
-                },
-                onStderr: { _ in }
-            )
-
-            downloadingModels.remove(modelId)
-            downloadProgress.removeValue(forKey: modelId)
-
-            await modelManager.refreshModels()
-
-            if let result, result.success, serverManager.activeModel == nil {
-                await serverManager.start(model: modelId)
+                statusText
             }
+
+            Spacer()
+
+            controlButtons
+        }
+        .padding(.horizontal, 8)
+        .padding(.vertical, 4)
+        .background(
+            RoundedRectangle(cornerRadius: 6)
+                .fill(backgroundColor)
+        )
+    }
+
+    @ViewBuilder
+    private var statusIcon: some View {
+        switch state {
+        case .downloading:
+            ProgressView(value: state.progress)
+                .frame(width: 30, height: 12)
+                .controlSize(.mini)
+        case .paused:
+            Image(systemName: "pause.circle.fill")
+                .font(.system(size: 12))
+                .foregroundStyle(.orange)
+        case .failed:
+            Image(systemName: "exclamationmark.circle.fill")
+                .font(.system(size: 12))
+                .foregroundStyle(.red)
+        case .completed:
+            Image(systemName: "checkmark.circle.fill")
+                .font(.system(size: 12))
+                .foregroundStyle(.green)
+        default:
+            EmptyView()
+        }
+    }
+
+    @ViewBuilder
+    private var statusText: some View {
+        switch state {
+        case .downloading(let progress):
+            Text("Downloading... \(Int(progress * 100))%")
+                .font(.system(size: 9))
+                .foregroundStyle(.secondary)
+        case .paused:
+            Text("Paused — tap resume to continue")
+                .font(.system(size: 9))
+                .foregroundStyle(.orange)
+        case .failed(let msg):
+            Text(msg)
+                .font(.system(size: 9))
+                .foregroundStyle(.red)
+                .lineLimit(1)
+        case .completed:
+            Text("Download complete")
+                .font(.system(size: 9))
+                .foregroundStyle(.green)
+        default:
+            EmptyView()
+        }
+    }
+
+    @ViewBuilder
+    private var controlButtons: some View {
+        HStack(spacing: 4) {
+            switch state {
+            case .downloading:
+                Button { onPause() } label: {
+                    Image(systemName: "pause.fill")
+                        .font(.system(size: 10))
+                        .frame(width: 20, height: 20)
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(.orange)
+                .help("Pause")
+
+                Button { onStop() } label: {
+                    Image(systemName: "stop.fill")
+                        .font(.system(size: 10))
+                        .frame(width: 20, height: 20)
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(.red)
+                .help("Stop")
+
+            case .paused:
+                Button { onResume() } label: {
+                    Image(systemName: "play.fill")
+                        .font(.system(size: 10))
+                        .frame(width: 20, height: 20)
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(.green)
+                .help("Resume")
+
+                Button { onStop() } label: {
+                    Image(systemName: "stop.fill")
+                        .font(.system(size: 10))
+                        .frame(width: 20, height: 20)
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(.red)
+                .help("Stop")
+
+            case .failed:
+                Button { onRestart() } label: {
+                    Image(systemName: "arrow.clockwise")
+                        .font(.system(size: 10))
+                        .frame(width: 20, height: 20)
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(.blue)
+                .help("Restart")
+
+                Button { onClear() } label: {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 10))
+                        .frame(width: 20, height: 20)
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(.secondary)
+                .help("Clear")
+
+            case .completed:
+                Button { onClear() } label: {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 10))
+                        .frame(width: 20, height: 20)
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(.secondary)
+                .help("Clear")
+
+            default:
+                EmptyView()
+            }
+        }
+    }
+
+    private var backgroundColor: Color {
+        switch state {
+        case .downloading: return .blue.opacity(0.04)
+        case .paused: return .orange.opacity(0.04)
+        case .failed: return .red.opacity(0.04)
+        case .completed: return .green.opacity(0.04)
+        default: return .clear
         }
     }
 }
 
 struct HFModelRow: View {
     let model: HFModel
-    let isDownloading: Bool
-    let progress: Double
+    let state: DownloadState
     let isInstalled: Bool
     let onDownload: () -> Void
+    let onPause: () -> Void
+    let onResume: () -> Void
+    let onStop: () -> Void
+    let onRestart: () -> Void
+    let onClear: () -> Void
 
     var body: some View {
         HStack(spacing: 8) {
@@ -165,9 +482,18 @@ struct HFModelRow: View {
                     .lineLimit(1)
                 HStack(spacing: 6) {
                     if let downloads = model.downloads {
-                        Image(systemName: "arrow.down.circle")
-                            .font(.system(size: 8))
-                        Text(model.formattedDownloads)
+                        HStack(spacing: 2) {
+                            Image(systemName: "arrow.down.circle")
+                                .font(.system(size: 8))
+                            Text(model.formattedDownloads)
+                        }
+                    }
+                    if let likes = model.likes, likes > 0 {
+                        HStack(spacing: 2) {
+                            Image(systemName: "heart")
+                                .font(.system(size: 8))
+                            Text(model.formattedLikes)
+                        }
                     }
                     if let tags = model.tags {
                         ForEach(tags.prefix(3), id: \.self) { tag in
@@ -181,6 +507,14 @@ struct HFModelRow: View {
                             }
                         }
                     }
+                    if let pipeline = model.pipelineTag {
+                        Text(pipeline.replacingOccurrences(of: "-", with: " "))
+                            .font(.system(size: 8))
+                            .padding(.horizontal, 3)
+                            .padding(.vertical, 1)
+                            .background(.purple.opacity(0.1))
+                            .cornerRadius(2)
+                    }
                 }
                 .font(.system(size: 9))
                 .foregroundStyle(.secondary)
@@ -188,14 +522,68 @@ struct HFModelRow: View {
 
             Spacer()
 
-            if isDownloading {
-                VStack(spacing: 2) {
-                    ProgressView(value: progress)
-                        .frame(width: 60)
-                        .controlSize(.small)
-                    Text("\(Int(progress * 100))%")
-                        .font(.system(size: 9))
-                        .foregroundStyle(.secondary)
+            if state.isDownloading {
+                HStack(spacing: 4) {
+                    VStack(spacing: 2) {
+                        ProgressView(value: state.progress)
+                            .frame(width: 50)
+                            .controlSize(.small)
+                        Text("\(Int(state.progress * 100))%")
+                            .font(.system(size: 9))
+                            .foregroundStyle(.secondary)
+                    }
+
+                    Button { onPause() } label: {
+                        Image(systemName: "pause.fill")
+                            .font(.system(size: 10))
+                    }
+                    .buttonStyle(.plain)
+                    .foregroundStyle(.orange)
+                    .help("Pause")
+
+                    Button { onStop() } label: {
+                        Image(systemName: "stop.fill")
+                            .font(.system(size: 10))
+                    }
+                    .buttonStyle(.plain)
+                    .foregroundStyle(.red)
+                    .help("Stop")
+                }
+            } else if state.isActive {
+                HStack(spacing: 4) {
+                    Image(systemName: "pause.circle.fill")
+                        .font(.system(size: 12))
+                        .foregroundStyle(.orange)
+
+                    Button { onResume() } label: {
+                        Image(systemName: "play.fill")
+                            .font(.system(size: 10))
+                    }
+                    .buttonStyle(.plain)
+                    .foregroundStyle(.green)
+                    .help("Resume")
+
+                    Button { onStop() } label: {
+                        Image(systemName: "stop.fill")
+                            .font(.system(size: 10))
+                    }
+                    .buttonStyle(.plain)
+                    .foregroundStyle(.red)
+                    .help("Stop")
+                }
+            } else if state.isFailed {
+                HStack(spacing: 4) {
+                    Image(systemName: "exclamationmark.circle.fill")
+                        .font(.system(size: 12))
+                        .foregroundStyle(.red)
+
+                    Button { onRestart() } label: {
+                        Image(systemName: "arrow.clockwise")
+                            .font(.system(size: 10))
+                    }
+                    .buttonStyle(.plain)
+                    .foregroundStyle(.blue)
+                    .help("Retry")
                 }
             } else if isInstalled {
                 Image(systemName: "checkmark.circle.fill")

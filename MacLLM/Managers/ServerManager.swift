@@ -306,7 +306,7 @@ class ServerManager {
         return freeGB >= (estimated + buffer)
     }
 
-    private func processOutput(_ output: String) {
+    func processOutput(_ output: String) {
         serverOutput += output
 
         let lines = output.split(separator: "\n", omittingEmptySubsequences: false)

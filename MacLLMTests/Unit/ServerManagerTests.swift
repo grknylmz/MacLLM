@@ -34,6 +34,9 @@ struct StartupStageTests {
         #expect(StartupStage.ready.isReady == true)
         #expect(StartupStage.idle.isReady == false)
         #expect(StartupStage.loadingWeights.isReady == false)
+        #expect(StartupStage.buildingModel.isReady == false)
+        #expect(StartupStage.warmingUp.isReady == false)
+        #expect(StartupStage.failed("err").isReady == false)
     }
 
     @Test("isFailed is true only for failed")
@@ -41,6 +44,9 @@ struct StartupStageTests {
         #expect(StartupStage.failed("err").isFailed == true)
         #expect(StartupStage.idle.isFailed == false)
         #expect(StartupStage.ready.isFailed == false)
+        #expect(StartupStage.loadingWeights.isFailed == false)
+        #expect(StartupStage.buildingModel.isFailed == false)
+        #expect(StartupStage.warmingUp.isFailed == false)
     }
 
     @Test("label returns correct strings")
@@ -51,6 +57,16 @@ struct StartupStageTests {
         #expect(StartupStage.warmingUp.label == "Warming up...")
         #expect(StartupStage.ready.label == "Server ready")
         #expect(StartupStage.failed("test").label == "Failed: test")
+    }
+
+    @Test("equality works")
+    func testEquality() {
+        #expect(StartupStage.idle == StartupStage.idle)
+        #expect(StartupStage.loadingWeights == StartupStage.loadingWeights)
+        #expect(StartupStage.ready == StartupStage.ready)
+        #expect(StartupStage.failed("a") == StartupStage.failed("a"))
+        #expect(StartupStage.failed("a") != StartupStage.failed("b"))
+        #expect(StartupStage.idle != StartupStage.ready)
     }
 }
 
@@ -72,6 +88,16 @@ struct LogLineTests {
         #expect(line.text == "hello")
         #expect(line.timestamp == date)
         #expect(line.type == .error)
+    }
+}
+
+@Suite("LogLineType Unit Tests")
+struct LogLineTypeTests {
+
+    @Test("LogLineType has all cases")
+    func testAllCases() {
+        let allTypes: [LogLineType] = [.info, .warning, .error, .debug]
+        #expect(allTypes.count == 4)
     }
 }
 
@@ -110,6 +136,24 @@ struct ServerManagerUnitTests {
 
         manager.status = .error("test error")
         #expect(manager.statusText == "Error: test error")
+    }
+
+    @Test("statusText uses startupStage label when starting")
+    func testStatusTextStartupStages() {
+        let manager = ServerManager()
+        manager.status = .starting
+
+        manager.startupStage = .buildingModel
+        #expect(manager.statusText == "Building model...")
+
+        manager.startupStage = .warmingUp
+        #expect(manager.statusText == "Warming up...")
+
+        manager.startupStage = .ready
+        #expect(manager.statusText == "Server ready")
+
+        manager.startupStage = .failed("oops")
+        #expect(manager.statusText == "Failed: oops")
     }
 
     @Test("statusEmoji returns correct SF Symbol names")
@@ -215,6 +259,15 @@ struct ServerManagerUnitTests {
             #expect(manager.startupStage != .idle)
             manager.stop()
         }
+    }
+
+    @Test("start does not proceed when already running")
+    func testStartDoesNotProceedWhenRunning() async {
+        let manager = ServerManager()
+        manager.status = .running
+        manager.activeModel = "org/existing"
+        await manager.start(model: "org/new")
+        #expect(manager.activeModel == "org/existing")
     }
 
     @Test("stop when already stopped remains stopped and resets stage")
@@ -324,6 +377,12 @@ struct ServerManagerUnitTests {
         #expect(manager.checkMemoryBeforeStart(estimatedRAMGB: 1.0, freeGB: 0.0) == false)
     }
 
+    @Test("checkMemoryBeforeStart with zero estimated but headroom fails")
+    func testCheckMemoryZeroEstimated() {
+        let manager = ServerManager()
+        #expect(manager.checkMemoryBeforeStart(estimatedRAMGB: 0.0, freeGB: 1.0) == false)
+    }
+
     @Test("killOrphanedMLXProcesses does not crash when no processes exist")
     func testKillOrphanedNoProcesses() {
         let manager = ServerManager()
@@ -356,5 +415,245 @@ struct ServerManagerUnitTests {
         manager.stop()
         manager.stop()
         #expect(manager.status == .stopped)
+    }
+
+    // MARK: - processOutput / updateStartupStage / lineType
+
+    @Test("processOutput appends to serverOutput")
+    func testProcessOutputAppends() {
+        let manager = ServerManager()
+        manager.status = .starting
+        manager.startupStage = .loadingWeights
+
+        manager.processOutput("line 1\n")
+        manager.processOutput("line 2\n")
+
+        #expect(manager.serverOutput == "line 1\nline 2\n")
+    }
+
+    @Test("processOutput creates log lines for non-empty content")
+    func testProcessOutputCreatesLogLines() {
+        let manager = ServerManager()
+        manager.status = .starting
+        manager.startupStage = .loadingWeights
+
+        manager.processOutput("hello\nworld\n")
+
+        #expect(manager.serverLogLines.count == 2)
+        #expect(manager.serverLogLines[0].text == "hello")
+        #expect(manager.serverLogLines[1].text == "world")
+    }
+
+    @Test("processOutput skips empty lines")
+    func testProcessOutputSkipsEmptyLines() {
+        let manager = ServerManager()
+        manager.status = .starting
+        manager.startupStage = .loadingWeights
+
+        manager.processOutput("hello\n\n  \nworld\n")
+
+        #expect(manager.serverLogLines.count == 2)
+    }
+
+    @Test("processOutput detects uvicorn running and sets status to running")
+    func testProcessOutputDetectsUvicornRunning() {
+        let manager = ServerManager()
+        manager.status = .starting
+        manager.startupStage = .loadingWeights
+
+        manager.processOutput("INFO: Uvicorn running on http://0.0.0.0:8080\n")
+
+        #expect(manager.status == .running)
+        #expect(manager.startupStage == .ready)
+    }
+
+    @Test("processOutput detects 'running on http' and sets status to running")
+    func testProcessOutputDetectsRunningOnHttp() {
+        let manager = ServerManager()
+        manager.status = .starting
+        manager.startupStage = .loadingWeights
+
+        manager.processOutput("Running on http://127.0.0.1:8080\n")
+
+        #expect(manager.status == .running)
+        #expect(manager.startupStage == .ready)
+    }
+
+    @Test("processOutput detects error and sets failed stage")
+    func testProcessOutputDetectsError() {
+        let manager = ServerManager()
+        manager.status = .starting
+        manager.startupStage = .loadingWeights
+
+        manager.processOutput("Traceback (most recent call last):\n  File \"test.py\"\n")
+
+        #expect(manager.startupStage.isFailed)
+    }
+
+    @Test("processOutput detects exception and sets failed stage")
+    func testProcessOutputDetectsException() {
+        let manager = ServerManager()
+        manager.status = .starting
+        manager.startupStage = .loadingWeights
+
+        manager.processOutput("RuntimeError: something went wrong\n")
+
+        #expect(manager.startupStage.isFailed)
+    }
+
+    @Test("processOutput detects building model stage")
+    func testProcessOutputDetectsBuildingModel() {
+        let manager = ServerManager()
+        manager.status = .starting
+        manager.startupStage = .loadingWeights
+
+        manager.processOutput("Building model...\n")
+
+        #expect(manager.startupStage == .buildingModel)
+    }
+
+    @Test("processOutput detects warming up stage")
+    func testProcessOutputDetectsWarmingUp() {
+        let manager = ServerManager()
+        manager.status = .starting
+        manager.startupStage = .loadingWeights
+
+        manager.processOutput("Warming up the model\n")
+
+        #expect(manager.startupStage == .warmingUp)
+    }
+
+    @Test("processOutput does not change stage when status is not starting")
+    func testProcessOutputNoChangeWhenNotStarting() {
+        let manager = ServerManager()
+        manager.status = .running
+        manager.startupStage = .ready
+
+        manager.processOutput("Building model...\n")
+
+        #expect(manager.startupStage == .ready)
+    }
+
+    @Test("processOutput error does not override non-starting status")
+    func testProcessOutputErrorOnlyWhenStarting() {
+        let manager = ServerManager()
+        manager.status = .running
+        manager.startupStage = .ready
+
+        manager.processOutput("Error: something bad\n")
+
+        #expect(manager.startupStage == .ready)
+        #expect(manager.status == .running)
+    }
+
+    @Test("processOutput truncates log buffer to maxLogLines")
+    func testProcessOutputTruncatesLogBuffer() {
+        let manager = ServerManager()
+        manager.status = .starting
+        manager.startupStage = .loadingWeights
+
+        for i in 0..<250 {
+            manager.processOutput("line \(i)\n")
+        }
+
+        #expect(manager.serverLogLines.count <= 200)
+    }
+
+    @Test("processOutput detects 'compile' keyword for building model")
+    func testProcessOutputDetectsCompile() {
+        let manager = ServerManager()
+        manager.status = .starting
+        manager.startupStage = .loadingWeights
+
+        manager.processOutput("compile model graph\n")
+
+        #expect(manager.startupStage == .buildingModel)
+    }
+
+    @Test("processOutput detects 'fuse' keyword for building model")
+    func testProcessOutputDetectsFuse() {
+        let manager = ServerManager()
+        manager.status = .starting
+        manager.startupStage = .loadingWeights
+
+        manager.processOutput("fuse layers\n")
+
+        #expect(manager.startupStage == .buildingModel)
+    }
+
+    @Test("processOutput detects 'serving' keyword for warming up")
+    func testProcessOutputDetectsServing() {
+        let manager = ServerManager()
+        manager.status = .starting
+        manager.startupStage = .loadingWeights
+
+        manager.processOutput("Serving model now\n")
+
+        #expect(manager.startupStage == .warmingUp)
+    }
+
+    @Test("processOutput detects 'load weights' for loadingWeights")
+    func testProcessOutputDetectsLoadWeights() {
+        let manager = ServerManager()
+        manager.status = .starting
+        manager.startupStage = .loadingWeights
+
+        manager.processOutput("Loading model weights from checkpoint\n")
+
+        #expect(manager.startupStage == .loadingWeights)
+    }
+
+    // MARK: - lineType
+
+    @Test("lineType detects error keywords")
+    func testLineTypeError() {
+        let manager = ServerManager()
+        manager.status = .starting
+        manager.startupStage = .loadingWeights
+
+        manager.processOutput("Error: failed to load\n")
+        #expect(manager.serverLogLines.last?.type == .error)
+
+        manager.processOutput("Traceback details here\n")
+        #expect(manager.serverLogLines.last?.type == .error)
+
+        manager.processOutput("Exception occurred\n")
+        #expect(manager.serverLogLines.last?.type == .error)
+
+        manager.processOutput("Process failed\n")
+        #expect(manager.serverLogLines.last?.type == .error)
+    }
+
+    @Test("lineType detects warning keywords")
+    func testLineTypeWarning() {
+        let manager = ServerManager()
+        manager.status = .starting
+        manager.startupStage = .loadingWeights
+
+        manager.processOutput("Warning: low memory\n")
+        #expect(manager.serverLogLines.last?.type == .warning)
+
+        manager.processOutput("Warn: deprecated API\n")
+        #expect(manager.serverLogLines.last?.type == .warning)
+    }
+
+    @Test("lineType detects debug keyword")
+    func testLineTypeDebug() {
+        let manager = ServerManager()
+        manager.status = .starting
+        manager.startupStage = .loadingWeights
+
+        manager.processOutput("Debug: verbose output\n")
+        #expect(manager.serverLogLines.last?.type == .debug)
+    }
+
+    @Test("lineType defaults to info")
+    func testLineTypeInfo() {
+        let manager = ServerManager()
+        manager.status = .starting
+        manager.startupStage = .loadingWeights
+
+        manager.processOutput("Normal log line\n")
+        #expect(manager.serverLogLines.last?.type == .info)
     }
 }

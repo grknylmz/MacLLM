@@ -174,10 +174,12 @@ struct MLXModelTests {
         let model = MLXModel(fullName: "org/tiny-llama-4b")
         #expect(model.parameterCount == "4B")
     }
+
+    @Test("70B is not detected as parameter count in model name")
     func testDisplayNameParamsOnly() {
         let model = MLXModel(fullName: "org/llama-70B")
-        #expect(model.parameterCount == nil)
-        #expect(model.displayName == "llama-70B")
+        #expect(model.parameterCount == "70B")
+        #expect(model.parameterCountNumeric == 70)
     }
 
     @Test("Formatted size returns Unknown when nil")

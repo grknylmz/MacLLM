@@ -33,7 +33,8 @@ struct HFModelTests {
         """.data(using: .utf8)!
 
         let model = try decoder.decode(HFModel.self, from: json)
-        #expect(model.id == "64a12345abc123")
+        #expect(model.id == "mlx-community/Qwen3.5-27B-4bit")
+        #expect(model.internalId == "64a12345abc123")
         #expect(model.modelId == "mlx-community/Qwen3.5-27B-4bit")
         #expect(model.author == "mlx-community")
         #expect(model.downloads == 15234)
@@ -57,7 +58,8 @@ struct HFModelTests {
         """.data(using: .utf8)!
 
         let model = try decoder.decode(HFModel.self, from: json)
-        #expect(model.id == "abc123")
+        #expect(model.id == "org/model")
+        #expect(model.internalId == "abc123")
         #expect(model.modelId == "org/model")
         #expect(model.author == nil)
         #expect(model.downloads == nil)
@@ -118,22 +120,74 @@ struct HFModelTests {
         #expect(model.formattedDownloads == "")
     }
 
-    @Test("displayName returns model id")
+    @Test("formattedLikes shows millions")
+    func testFormattedLikesMillions() {
+        let json = """
+        {"_id": "1", "modelId": "org/model", "likes": 1500000}
+        """.data(using: .utf8)!
+        let model = try! decoder.decode(HFModel.self, from: json)
+        #expect(model.formattedLikes == "1.5M")
+    }
+
+    @Test("formattedLikes shows thousands")
+    func testFormattedLikesThousands() {
+        let json = """
+        {"_id": "1", "modelId": "org/model", "likes": 3500}
+        """.data(using: .utf8)!
+        let model = try! decoder.decode(HFModel.self, from: json)
+        #expect(model.formattedLikes == "3.5K")
+    }
+
+    @Test("formattedLikes shows exact for under 1000")
+    func testFormattedLikesSmall() {
+        let json = """
+        {"_id": "1", "modelId": "org/model", "likes": 42}
+        """.data(using: .utf8)!
+        let model = try! decoder.decode(HFModel.self, from: json)
+        #expect(model.formattedLikes == "42")
+    }
+
+    @Test("formattedLikes returns empty string for nil")
+    func testFormattedLikesNil() {
+        let json = """
+        {"_id": "1", "modelId": "org/model"}
+        """.data(using: .utf8)!
+        let model = try! decoder.decode(HFModel.self, from: json)
+        #expect(model.formattedLikes == "")
+    }
+
+    @Test("Decodes HFModel with likes and trendingScore")
+    func testDecodeWithLikesAndTrendingScore() throws {
+        let json = """
+        {
+            "_id": "abc123",
+            "modelId": "org/model",
+            "likes": 500,
+            "trendingScore": 42
+        }
+        """.data(using: .utf8)!
+
+        let model = try decoder.decode(HFModel.self, from: json)
+        #expect(model.likes == 500)
+        #expect(model.trendingScore == 42)
+    }
+
+    @Test("displayName returns modelId")
     func testDisplayName() throws {
         let json = """
         {"_id": "1", "modelId": "mlx-community/Qwen3.5-27B-4bit"}
         """.data(using: .utf8)!
         let model = try decoder.decode(HFModel.self, from: json)
-        #expect(model.displayName == "1")
+        #expect(model.displayName == "mlx-community/Qwen3.5-27B-4bit")
     }
 
-    @Test("Conformance to Identifiable uses id")
+    @Test("Conformance to Identifiable uses modelId")
     func testIdentifiable() throws {
         let json = """
         {"_id": "unique-id-123", "modelId": "org/model"}
         """.data(using: .utf8)!
         let model = try decoder.decode(HFModel.self, from: json)
-        #expect(model.id == "unique-id-123")
+        #expect(model.id == "org/model")
     }
 }
 

@@ -12,11 +12,13 @@
 		1D0C4C6A38ECA28DDB23747C /* TopProcessesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA4EA9E1BF4998E558DA1994 /* TopProcessesView.swift */; };
 		1D7C0AF847DB2DA90C9A09B8 /* PopoverView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B72ABB8CDEA707C266026E0 /* PopoverView.swift */; };
 		207A4D082857C0F9D4BAC012 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = D1F92A923887A4F9ADE45F69 /* Assets.xcassets */; };
+		21D2BB6DEBC9B38D89EFEA10 /* DownloadManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9B2706FB506BA0668E6E63E /* DownloadManager.swift */; };
 		3115A2B5A5C9BE2F9FF939B4 /* ServerManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01875B7174B5BD17E3C5012E /* ServerManagerTests.swift */; };
 		4355BFBE46493048C26AC682 /* SystemMemoryMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = AEE7F79D6F90238B5E09CD53 /* SystemMemoryMonitor.swift */; };
 		4E6DC288A0EFB3C638832DB6 /* PythonEnvManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BC148E77D522CA200D98B49 /* PythonEnvManagerTests.swift */; };
 		537BC2C22A97610E9DB92345 /* MacLLMApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3CF86DB2D591A8C8A1B9316 /* MacLLMApp.swift */; };
 		54BF5C56FFEA2387CC6DF5A3 /* LogPanelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 341ADA49879430076E166E3C /* LogPanelView.swift */; };
+		63FB3A877CC5CBA246CB571C /* ModelManagerCleanupTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FCB0C990DF223F237716D7E /* ModelManagerCleanupTests.swift */; };
 		6E7E712D7FBC9D840E9972D9 /* HuggingFaceClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB659224BFBEA664917ED9FF /* HuggingFaceClient.swift */; };
 		71D15FD079DD485999DA2862 /* PythonEnvManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E6849D552677075D23BC4BD /* PythonEnvManager.swift */; };
 		76524207D77B8289D4BC0995 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81068E34A9406A36FE25520B /* SettingsView.swift */; };
@@ -35,12 +37,14 @@
 		C9494A4A8507289633B195BC /* HuggingFaceClientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83F7B7E7C2A7247D4B6254F6 /* HuggingFaceClientTests.swift */; };
 		D1A216935CA0BDF7423B9A5A /* ProcessInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 478CFC20450DA8BEA09CE64D /* ProcessInfo.swift */; };
 		D46111BE034A719C1D949C7B /* ServerStatusView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F1AF73E1189617D76F655B5 /* ServerStatusView.swift */; };
+		D93BF28C3B238A4498FA7CE4 /* DownloadStateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A22347E5CC17CB32DD62C9AC /* DownloadStateTests.swift */; };
 		E2F1631408EF04FE4C4A9436 /* HFSearchResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A0A3B1C710B256F3710F759 /* HFSearchResult.swift */; };
 		E5704466916277B907F88350 /* ProcessRunner.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE7A481D7A093F734B9AF87E /* ProcessRunner.swift */; };
 		EB9324B40884D313B6422097 /* MemoryWarningNotifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1EFD9B8480F4D090E40BEEA /* MemoryWarningNotifier.swift */; };
 		F03D2B9495C34E6B0B6447B1 /* ProcessResultTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEB66C1BCA35771BA863FE12 /* ProcessResultTests.swift */; };
 		F5125EAFC74BAA979DAE0404 /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF05CAD39C8846F11B3F5ABA /* Constants.swift */; };
 		FA6EE52A877ECF6C829AACA1 /* ProcessInfoTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5143E016B7FDF8A824808E85 /* ProcessInfoTests.swift */; };
+		FD42AEEEB30CCFBB25574F22 /* DownloadManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A2DB408FC14F6FC2612130A /* DownloadManagerTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -57,12 +61,14 @@
 		01875B7174B5BD17E3C5012E /* ServerManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerManagerTests.swift; sourceTree = "<group>"; };
 		029C9F8687C2C8489331521C /* ProcessRunnerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProcessRunnerTests.swift; sourceTree = "<group>"; };
 		07EB0050AFD831406555905F /* ConstantsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConstantsTests.swift; sourceTree = "<group>"; };
+		1FCB0C990DF223F237716D7E /* ModelManagerCleanupTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelManagerCleanupTests.swift; sourceTree = "<group>"; };
 		22DA8E241A4E37DA8D4A2F28 /* HFModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HFModelTests.swift; sourceTree = "<group>"; };
 		23A5C171FE5F8407EDDF7E1B /* MLXModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MLXModelTests.swift; sourceTree = "<group>"; };
 		2E6849D552677075D23BC4BD /* PythonEnvManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PythonEnvManager.swift; sourceTree = "<group>"; };
 		2F3BB331DE8C6BBFB41642ED /* SystemMemoryMonitorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemMemoryMonitorTests.swift; sourceTree = "<group>"; };
 		341ADA49879430076E166E3C /* LogPanelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogPanelView.swift; sourceTree = "<group>"; };
 		478CFC20450DA8BEA09CE64D /* ProcessInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProcessInfo.swift; sourceTree = "<group>"; };
+		4A2DB408FC14F6FC2612130A /* DownloadManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadManagerTests.swift; sourceTree = "<group>"; };
 		5143E016B7FDF8A824808E85 /* ProcessInfoTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProcessInfoTests.swift; sourceTree = "<group>"; };
 		54A30EB37BD5B150339A9036 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		5F1AF73E1189617D76F655B5 /* ServerStatusView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerStatusView.swift; sourceTree = "<group>"; };
@@ -77,6 +83,7 @@
 		8A78837942B6CAD042394CF9 /* MacLLMTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MacLLMTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		8A878CFC51FEE375833571B5 /* ModelListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelListView.swift; sourceTree = "<group>"; };
 		9B72ABB8CDEA707C266026E0 /* PopoverView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PopoverView.swift; sourceTree = "<group>"; };
+		A22347E5CC17CB32DD62C9AC /* DownloadStateTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadStateTests.swift; sourceTree = "<group>"; };
 		ACD04F86E8CCE955AD75A849 /* ModelManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelManagerTests.swift; sourceTree = "<group>"; };
 		AEE7F79D6F90238B5E09CD53 /* SystemMemoryMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemMemoryMonitor.swift; sourceTree = "<group>"; };
 		BF51239537120817F0908B93 /* MacLLM.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MacLLM.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -90,6 +97,7 @@
 		DF05CAD39C8846F11B3F5ABA /* Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = "<group>"; };
 		EB659224BFBEA664917ED9FF /* HuggingFaceClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HuggingFaceClient.swift; sourceTree = "<group>"; };
 		F3CF86DB2D591A8C8A1B9316 /* MacLLMApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacLLMApp.swift; sourceTree = "<group>"; };
+		F9B2706FB506BA0668E6E63E /* DownloadManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadManager.swift; sourceTree = "<group>"; };
 		FD29720AB6877C2EC134DBBB /* MemoryControlsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoryControlsView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -127,9 +135,12 @@
 			isa = PBXGroup;
 			children = (
 				07EB0050AFD831406555905F /* ConstantsTests.swift */,
+				4A2DB408FC14F6FC2612130A /* DownloadManagerTests.swift */,
+				A22347E5CC17CB32DD62C9AC /* DownloadStateTests.swift */,
 				22DA8E241A4E37DA8D4A2F28 /* HFModelTests.swift */,
 				83F7B7E7C2A7247D4B6254F6 /* HuggingFaceClientTests.swift */,
 				23A5C171FE5F8407EDDF7E1B /* MLXModelTests.swift */,
+				1FCB0C990DF223F237716D7E /* ModelManagerCleanupTests.swift */,
 				5143E016B7FDF8A824808E85 /* ProcessInfoTests.swift */,
 				CEB66C1BCA35771BA863FE12 /* ProcessResultTests.swift */,
 				029C9F8687C2C8489331521C /* ProcessRunnerTests.swift */,
@@ -200,6 +211,7 @@
 		ED84DF85F734BB5BCAEE9636 /* Managers */ = {
 			isa = PBXGroup;
 			children = (
+				F9B2706FB506BA0668E6E63E /* DownloadManager.swift */,
 				EB659224BFBEA664917ED9FF /* HuggingFaceClient.swift */,
 				6D4E8A54AF09EB9EF686F03C /* ModelManager.swift */,
 				2E6849D552677075D23BC4BD /* PythonEnvManager.swift */,
@@ -263,7 +275,7 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
-				LastUpgradeCheck = 1500;
+				LastUpgradeCheck = 1600;
 				TargetAttributes = {
 					1F9A9F1361E1973874ED978E = {
 						ProvisioningStyle = Automatic;
@@ -311,6 +323,7 @@
 			files = (
 				96BE5FCB8DA72F0FC6E5077E /* AppDelegate.swift in Sources */,
 				F5125EAFC74BAA979DAE0404 /* Constants.swift in Sources */,
+				21D2BB6DEBC9B38D89EFEA10 /* DownloadManager.swift in Sources */,
 				A0223B865B51B89D58F8DCEC /* DownloadView.swift in Sources */,
 				E2F1631408EF04FE4C4A9436 /* HFSearchResult.swift in Sources */,
 				6E7E712D7FBC9D840E9972D9 /* HuggingFaceClient.swift in Sources */,
@@ -338,9 +351,12 @@
 			buildActionMask = 2147483647;
 			files = (
 				A9A8EAB98BC0F6AE0F8DA247 /* ConstantsTests.swift in Sources */,
+				FD42AEEEB30CCFBB25574F22 /* DownloadManagerTests.swift in Sources */,
+				D93BF28C3B238A4498FA7CE4 /* DownloadStateTests.swift in Sources */,
 				0ECA889C259BBC1EC4D74F18 /* HFModelTests.swift in Sources */,
 				C9494A4A8507289633B195BC /* HuggingFaceClientTests.swift in Sources */,
 				ABAD88E161EABD3DEC70A3D8 /* MLXModelTests.swift in Sources */,
+				63FB3A877CC5CBA246CB571C /* ModelManagerCleanupTests.swift in Sources */,
 				83F51BA3136BDAC1456A22D3 /* ModelManagerTests.swift in Sources */,
 				FA6EE52A877ECF6C829AACA1 /* ProcessInfoTests.swift in Sources */,
 				F03D2B9495C34E6B0B6447B1 /* ProcessResultTests.swift in Sources */,

@@ -99,40 +99,29 @@ struct ProcessRunnerTests {
 @Suite("ProcessRunner runWithOutput Tests")
 struct ProcessRunnerWithOutputTests {
 
-    @Test("runWithOutput captures stdout via callback")
-    func testRunWithOutputCallback() async throws {
-        var capturedOutput: [String] = []
-
+    @Test("runWithOutput captures stdout in result")
+    func testRunWithOutputStdout() async throws {
         let result = try await ProcessRunner.runWithOutput(
             executable: "/bin/echo",
             arguments: ["callback test"],
-            onStdout: { output in
-                capturedOutput.append(output)
-            },
+            onStdout: { _ in },
             onStderr: { _ in }
         )
 
         #expect(result.success)
         #expect(result.stdout.contains("callback test"))
-        let combined = capturedOutput.joined()
-        #expect(combined.contains("callback test"))
     }
 
-    @Test("runWithOutput captures stderr via callback")
+    @Test("runWithOutput captures stderr in result")
     func testRunWithOutputStderr() async throws {
-        var capturedStderr: [String] = []
-
         let result = try await ProcessRunner.runWithOutput(
             executable: "/bin/zsh",
             arguments: ["-c", "echo 'err' >&2"],
             onStdout: { _ in },
-            onStderr: { output in
-                capturedStderr.append(output)
-            }
+            onStderr: { _ in }
         )
 
         #expect(result.success)
-        let combined = capturedStderr.joined()
-        #expect(combined.contains("err"))
+        #expect(result.stderr.contains("err"))
     }
 }

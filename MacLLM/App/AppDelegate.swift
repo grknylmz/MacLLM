@@ -11,6 +11,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     let pythonEnvManager = PythonEnvManager()
     let memoryMonitor = SystemMemoryMonitor()
     let memoryNotifier = MemoryWarningNotifier()
+    lazy var downloadManager = DownloadManager(modelManager: modelManager, serverManager: serverManager)
 
     private var eventMonitor: Any?
     private var memoryCheckTimer: Timer?
@@ -35,7 +36,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 modelManager: modelManager,
                 hfClient: hfClient,
                 pythonEnvManager: pythonEnvManager,
-                memoryMonitor: memoryMonitor
+                memoryMonitor: memoryMonitor,
+                downloadManager: downloadManager
             )
         )
 
@@ -51,6 +53,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             startMemoryWarningCheck()
             await pythonEnvManager.setupIfNeeded()
             await modelManager.refreshModels()
+            modelManager.cleanStaleDownloads()
+            downloadManager.detectInterruptedDownloads()
             await autoStartIfConfigured()
         }
     }

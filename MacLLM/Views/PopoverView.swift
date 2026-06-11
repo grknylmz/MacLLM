@@ -6,6 +6,7 @@ struct PopoverView: View {
     let hfClient: HuggingFaceClient
     let pythonEnvManager: PythonEnvManager
     let memoryMonitor: SystemMemoryMonitor
+    let downloadManager: DownloadManager
 
     @State private var selectedTab: Tab = .models
 
@@ -38,24 +39,28 @@ struct PopoverView: View {
             Divider()
 
             ScrollView {
-                VStack(spacing: 10) {
-                    switch selectedTab {
-                    case .models:
-                        ModelListView(modelManager: modelManager, serverManager: serverManager, memoryMonitor: memoryMonitor)
-                    case .download:
-                        DownloadView(
-                            hfClient: hfClient,
-                            modelManager: modelManager,
-                            serverManager: serverManager,
-                            pythonEnvManager: pythonEnvManager
-                        )
-                    case .settings:
-                        SettingsView(
-                            serverManager: serverManager,
-                            pythonEnvManager: pythonEnvManager,
-                            memoryMonitor: memoryMonitor
-                        )
-                    }
+                ZStack {
+                    ModelListView(modelManager: modelManager, serverManager: serverManager, memoryMonitor: memoryMonitor)
+                        .opacity(selectedTab == .models ? 1 : 0)
+                        .frame(height: selectedTab == .models ? nil : 0)
+
+                    DownloadView(
+                        hfClient: hfClient,
+                        modelManager: modelManager,
+                        serverManager: serverManager,
+                        pythonEnvManager: pythonEnvManager,
+                        downloadManager: downloadManager
+                    )
+                    .opacity(selectedTab == .download ? 1 : 0)
+                    .frame(height: selectedTab == .download ? nil : 0)
+
+                    SettingsView(
+                        serverManager: serverManager,
+                        pythonEnvManager: pythonEnvManager,
+                        memoryMonitor: memoryMonitor
+                    )
+                    .opacity(selectedTab == .settings ? 1 : 0)
+                    .frame(height: selectedTab == .settings ? nil : 0)
                 }
                 .padding(.vertical, 8)
             }
